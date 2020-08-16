@@ -5,6 +5,7 @@ set -e
 if [ "$APP_ENV" != 'prod' ]; then
 		composer install --prefer-dist --no-progress --no-suggest --no-interaction
 fi
+
 if [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 
 	mkdir -p var/cache var/log
@@ -13,4 +14,3 @@ if [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 fi
 
 exec /usr/bin/supervisord  -n
-

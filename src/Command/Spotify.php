@@ -15,34 +15,39 @@ final class Spotify extends Command
     private $mercureConsumer;
     private $twitchClient;
     private $spotifyClient;
-
-    public function __construct(TwitchClient $twitchClient, MercureConsumer $mercureConsumer, SpotifyClient $spotifyClient)
-    {
+    private string $twitchChannel;
+    
+    public function __construct(
+        TwitchClient $twitchClient,
+        MercureConsumer $mercureConsumer,
+        SpotifyClient $spotifyClient,
+        string $twitchChannel
+    ) {
         $this->mercureConsumer = $mercureConsumer;
         $this->twitchClient = $twitchClient;
         $this->spotifyClient = $spotifyClient;
         parent::__construct();
+        $this->twitchChannel = $twitchChannel;
     }
-
+    
     protected static $defaultName = 'app:spotify';
-
+    
     protected function configure()
     {
         $this
             ->setDescription('User\'s Currently Playing Track.')
-            ->addArgument('channel', InputArgument::REQUIRED, 'The twitch channel to write to.')
         ;
     }
-
+    
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $topics = [sprintf('https://twitch.tv/%s/command/music', $input->getArgument('channel'))];
+        $topics = [sprintf('https://twitch.tv/%s/command/music', $this->twitchChannel)];
         $this->twitchClient->connect();
-
         foreach ($this->mercureConsumer->__invoke($topics) as $message) {
-            $this->twitchClient->sendMessage('Current track: '.$this->spotifyClient->getCurrentTrack());
+            $this->twitchClient->sendMessage('Current track: ' . $this->spotifyClient->getCurrentTrack());
+            $this->twitchClient->run(0.1);
         }
-
+        
         return Command::SUCCESS;
     }
 }

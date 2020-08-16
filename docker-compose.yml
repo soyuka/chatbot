@@ -1,13 +1,14 @@
 version: '3.4'
 
 services:
-    mercure: 
+    mercure:
         image: dunglas/mercure
         environment:
             - JWT_KEY=aw3s0mep4ss
             - CORS_ALLOWED_ORIGINS=*
             - ALLOW_ANONYMOUS=true
             - PUBLISH_ALLOWED_ORIGINS=http://command-interceptor
+
     commands:
         build:
             context: .

@@ -2,12 +2,12 @@
 
 namespace App;
 
+use Drift\HttpKernel\AsyncKernel;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
-class Kernel extends BaseKernel
+class Kernel extends AsyncKernel
 {
     use MicroKernelTrait;
 

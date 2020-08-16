@@ -15,7 +15,7 @@ final class TwitchInterceptor extends Command
     private $client;
     private $publisher;
     private $serializer;
-
+    
     public function __construct(Client $client, Publisher $publisher, SerializerInterface $serializer)
     {
         $this->client = $client;
@@ -23,33 +23,34 @@ final class TwitchInterceptor extends Command
         $this->serializer = $serializer;
         parent::__construct();
     }
-
+    
     protected static $defaultName = 'app:twitch-interceptor';
-
+    
     protected function configure()
     {
         $this
-            ->setDescription('Listen to twitch IRC and publish updates on a Mercure hub.')
-            ;
+            ->setDescription('Listen to twitch IRC and publish updates on a Mercure hub.');
     }
-
+    
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->client->connect();
-        while ($this->client->isConnected()) {
-            foreach ($this->client->read() as $message) {
-                $channel = substr($message->getChannel(), 1); // remove #
-                $topics = [sprintf('https://twitch.tv/%s', $channel)];
-                if ($message->isCommand()) {
-                    $topics[] = sprintf('https://twitch.tv/%s/command/%s', $channel, $message->getCommand());
-                }
+        
+        $stream = $this->client->connect();
+        $this->client->sendMessage('Coucou je suis le bot');
+        $stream->on('data', [$this->client, 'parse']);
+        $stream->on('message', function($data) {
+            $message = json_decode($data, true);
+            $channel = substr($message['channel'], 1); // remove #
+            $topics = [sprintf('https://twitch.tv/%s', $channel)];
 
-                $this->publisher->__invoke(new Update($topics, $this->serializer->serialize($message, 'json')));
+            if ($message['isCommand']) {
+                $topics[] = sprintf('https://twitch.tv/%s/command/%s', $channel, $message['command']);
             }
-
-            sleep(1);
-        }
-
+            $this->publisher->__invoke(new Update($topics, $data));
+            
+        });
+        $this->client->run();
+        
         return Command::SUCCESS;
     }
 }
