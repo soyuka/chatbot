@@ -37,6 +37,7 @@ final class Consumer
                     return;
                 }
                 if ($chunk instanceof ServerSentEvent) {
+                 
                     yield $this->serializer->deserialize($chunk->getData(), $this->getMessageClass($topics), 'json');
                 }
             }

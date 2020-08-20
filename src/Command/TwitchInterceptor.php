@@ -36,8 +36,9 @@ final class TwitchInterceptor extends Command
     {
         
         $stream = $this->client->connect();
-        $this->client->sendMessage('Coucou je suis le bot');
+
         $stream->on('data', [$this->client, 'parse']);
+      
         $stream->on('message', function($data) {
             $message = json_decode($data, true);
             $channel = substr($message['channel'], 1); // remove #
@@ -49,6 +50,7 @@ final class TwitchInterceptor extends Command
             $this->publisher->__invoke(new Update($topics, $data));
             
         });
+        
         $this->client->run();
         
         return Command::SUCCESS;

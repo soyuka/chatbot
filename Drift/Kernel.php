@@ -1,5 +1,4 @@
 <?php
-
 /*
  * This file is part of the DriftPHP package.
  *
@@ -10,7 +9,6 @@
  *
  * @author Marc Morera <yuhu@mmoreram.com>
  */
-
 declare(strict_types=1);
 
 namespace Drift;
@@ -34,7 +32,7 @@ class Kernel extends AsyncKernel
      */
     public function registerBundles(): iterable
     {
-        $contents = require $this->getApplicationLayerDir().'/../config/bundles.php';
+        $contents = require $this->getApplicationLayerDir() . '/../config/bundles.php';
         foreach ($contents as $class => $envs) {
             if ($envs[$this->environment] ?? $envs['all'] ?? false) {
                 yield new $class($this);
@@ -55,19 +53,19 @@ class Kernel extends AsyncKernel
      */
     private function getApplicationLayerDir(): string
     {
-        return $this->getProjectDir().'/Drift';
+        return $this->getProjectDir() . '/Drift';
     }
     
     /**
      * @param ContainerBuilder $container
-     * @param LoaderInterface  $loader
+     * @param LoaderInterface $loader
      *
      * @throws \Exception
      */
     protected function configureContainer(ContainerBuilder $container, LoaderInterface $loader): void
     {
-        $confDir = $this->getApplicationLayerDir().'/../config';
-        $loader->load($confDir.'/services.php');
+        $confDir = $this->getApplicationLayerDir() . '/../config';
+        $loader->load($confDir . '/services.php');
     }
     
     /**
@@ -77,6 +75,7 @@ class Kernel extends AsyncKernel
      */
     protected function configureRoutes(RouteCollectionBuilder $routes): void
     {
-    
+        $confDir = $this->getApplicationLayerDir() . '/../config';
+        $routes->import($confDir . '/routes.yml');
     }
 }

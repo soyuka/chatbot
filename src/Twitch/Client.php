@@ -12,12 +12,14 @@ declare(strict_types=1);
 namespace App\Twitch;
 
 use App\Exception\TwitchConnectionFailedException;
+use App\Service\IClient;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use React\EventLoop\LoopInterface;
 use React\Stream\DuplexResourceStream;
 use React\Stream\DuplexStreamInterface;
 
-final class Client
+final class Client implements IClient
 {
     private const TWITCH_IRC_URI = 'irc.chat.twitch.tv';
     private const TWITCH_IRC_PORT = 6667;
@@ -41,10 +43,10 @@ final class Client
         $this->loop = \React\EventLoop\Factory::create();
     }
     
-    public function connect(): DuplexStreamInterface
+    public function connect(?LoopInterface $loop = null): DuplexStreamInterface
     {
         $stream = stream_socket_client(self::TWITCH_IRC_URI . ':' . self::TWITCH_IRC_PORT);
-        $this->socket = new DuplexResourceStream($stream, $this->loop, self::MAX_LINE);
+        $this->socket = new DuplexResourceStream($stream, $loop ?? $this->loop, self::MAX_LINE);
         $this->logger->info(sprintf('Connecting onto %s:%s on channel %s as %s', self::TWITCH_IRC_URI,
             self::TWITCH_IRC_PORT, $this->channel, $this->botUsername));
         $this->send(sprintf('PASS %s', $this->oauthToken));
@@ -98,6 +100,11 @@ final class Client
     {
         $this->send(sprintf('PRIVMSG #%s :%s', $this->channel, $message));
         $this->logger->info('send message ' . $message . " \r\n");
+    }
+    
+    public function emit(string $messageType, array $content): void
+    {
+        $this->socket->emit($messageType, $content);
     }
     
     public function send(string $message): void

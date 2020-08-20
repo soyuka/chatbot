@@ -18,3 +18,5 @@ services:
             - mercure
         volumes:
             - '.:/usr/src/chatbot'
+        ports:
+            - 8080:80

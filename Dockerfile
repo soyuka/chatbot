@@ -16,5 +16,4 @@ COPY ./config/services.conf /etc/supervisor/conf.d/chatbot.conf
 
 COPY ./config/supervisord.conf /etc/supervisord.conf
 
-#ENTRYPOINT ["/opt/entrypoint.sh"]
-CMD [ "/usr/bin/supervisord" , "-n"]
+CMD [ "bin/console" , "app:twitch:run" ,  "-vvv"]

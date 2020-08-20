@@ -13,6 +13,9 @@ return function(ContainerConfigurator $configurator) {
     $parameters = $configurator->parameters();
     $parameters->set('app.mercure.jwt', $_ENV['MERCURE_JWT_TOKEN'])
         ->set('app.mercure.hub', $_ENV['MERCURE_HUB_URL'])
+        ->set('app.path', getcwd())
+        ->set('env(COMMANDS)', '["app:dice", "app:spotify"]')
+        
     ;
     $services = $configurator->services()
         ->defaults()
@@ -20,6 +23,7 @@ return function(ContainerConfigurator $configurator) {
         ->autoconfigure()
         ->bind('$mercureHubUrl', '%app.mercure.hub%')
         ->bind('$twitchChannel', $_ENV['TWITCH_CHANNEL_NAME'])
+        ->bind('$commands',     '%env(json:COMMANDS)%')
     ;
     $services->load('App\\', '../src/*')
         ->exclude('../src/{DependencyInjection,Entity,Tests,Kernel.php}')
