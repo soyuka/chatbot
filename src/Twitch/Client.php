@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace App\Twitch;
 
 use App\Exception\TwitchConnectionFailedException;
+use App\Transport\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use React\EventLoop\Factory;
@@ -22,7 +23,7 @@ use React\EventLoop\LoopInterface;
 use React\Stream\DuplexResourceStream;
 use React\Stream\DuplexStreamInterface;
 
-final class Client
+final class Client implements ClientInterface
 {
     private const TWITCH_IRC_URI = 'irc.chat.twitch.tv';
     private const TWITCH_IRC_PORT = 6667;

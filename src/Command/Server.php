@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace App\Command;
 
 use App\Http\Server as HttpServer;
+use App\Transport\Controller as TransportController;
 use App\Twitch\Client as TwitchClient;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\Factory as EventLoopFactory;
@@ -26,6 +27,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Mercure\Publisher;
 use Symfony\Component\Mercure\Update;
 use Symfony\Component\Serializer\SerializerInterface;
+use function Symfony\Component\String\u;
 
 class Server extends Command
 {
@@ -34,17 +36,20 @@ class Server extends Command
     private Publisher $publisher;
     private SerializerInterface $serializer;
     private HttpServer $httpServer;
+    private TransportController $transportController;
 
     public function __construct(
         TwitchClient $twitchClient,
         Publisher $publisher,
         SerializerInterface $serializer,
-        HttpServer $httpServer
+        HttpServer $httpServer,
+        TransportController $transportController
     ) {
         $this->twitchClient = $twitchClient;
         $this->publisher = $publisher;
         $this->serializer = $serializer;
         $this->httpServer = $httpServer;
+        $this->transportController = $transportController;
         parent::__construct();
     }
 
@@ -58,19 +63,20 @@ class Server extends Command
                 return new Response(400);
             }
 
-            switch ($request->getUri()->getPath()) {
-                case '/twitch':
-                    try {
-                        $body = json_decode($request->getBody()->getContents(), true);
-                        $this->twitchClient->sendMessage($body['message']);
+            $path = (string) u($request->getUri()->getPath())->lower();
+            $parts = explode('/', $path);
 
-                        return new Response(202);
-                    } catch (\Exception $e) {
-                        $io->error($e->getMessage());
+            if ('transport' === $parts[0]) {
+                try {
+                    return $this->transportController->__invoke($request, $this->getClient($parts[1]));
+                } catch (\Exception $e) {
+                    $io->error($e->getMessage());
 
-                        return new Response(500);
-                    }
+                    return new Response(500);
+                }
             }
+
+            return new Response(404);
         });
 
         $clientSocket = $this->twitchClient->connect($loop);
@@ -90,5 +96,13 @@ class Server extends Command
         $loop->run();
 
         return Command::SUCCESS;
+    }
+
+    private function getClient(string $client)
+    {
+        switch ($client) {
+            case 'twitch':
+              return $this->twitchClient;
+        }
     }
 }
