@@ -29,10 +29,8 @@ final class Client
 
     public function postMessage(string $service, string $message)
     {
-        $response = $this->client->request('POST', 'http://'.$this->httpHost.'/'.$service, [
+        return $this->client->request('POST', 'http://'.$this->httpHost.'/'.$service, [
             'json' => ['message' => $message],
         ]);
-
-        return $response;
     }
 }

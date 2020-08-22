@@ -14,3 +14,4 @@
 /.php_cs.cache
 ###< friendsofphp/php-cs-fixer ###
 node_modules
+.env
