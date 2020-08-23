@@ -1,7 +1,22 @@
 <?php
 
+/*
+ * This file is part of the Bizmuth Bot project
+ *
+ * (c) Antoine Bluchet <antoine@bluchet.fr>
+ * (c) Lemay Marc <flugv1@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use App\Drift\Controller\CommandController;
+use App\Drift\Controller\Twitch\GetCommand;
+use App\Drift\Controller\Twitch\PostCommand;
+use App\Http\Router\RoutesCollection;
+use App\Service\ClientCollection;
 use App\Spotify\Client as SpotifyClient;
 use App\Twitch\Client as TwitchClient;
 use Symfony\Component\HttpClient\EventSourceHttpClient;
@@ -9,21 +24,22 @@ use Symfony\Component\Mercure\Jwt\StaticJwtProvider;
 use Symfony\Component\Mercure\Publisher;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-return function(ContainerConfigurator $configurator) {
+return function (ContainerConfigurator $configurator) {
     $parameters = $configurator->parameters();
     $parameters->set('app.mercure.jwt', $_ENV['MERCURE_JWT_TOKEN'])
         ->set('app.mercure.hub', $_ENV['MERCURE_HUB_URL'])
+        ->set('env(COMMANDS)', '["app:dice", "app:spotify"]')
     ;
-
     $services = $configurator->services()
         ->defaults()
         ->autowire()
         ->autoconfigure()
+        ->bind('$bootstrapPath', getcwd().'/vendor/drift/server/src/bootstrap.php')
         ->bind('$mercureHubUrl', '%app.mercure.hub%')
         ->bind('$twitchChannel', '%app.twitch.channel_name%')
         ->bind('$httpHost', '0.0.0.0:8080')
+        ->bind('$commands', '%env(json:COMMANDS)%')
     ;
-
     $services->load('App\\', '../src/*')
         ->exclude('../src/{DependencyInjection,Entity,Tests,Kernel.php}')
     ;
@@ -38,7 +54,7 @@ return function(ContainerConfigurator $configurator) {
             service(HttpClientInterface::class),
         ])
     ;
-    /**
+    /*
      * Spotify Client
      */
     $configurator->parameters()
@@ -47,7 +63,7 @@ return function(ContainerConfigurator $configurator) {
     $services->get(SpotifyClient::class)
         ->arg('$spotifyToken', '%app.spotify.oauth_token%')
     ;
-    /**
+    /*
      * Twitch settings
      */
     $configurator->parameters()
@@ -60,5 +76,21 @@ return function(ContainerConfigurator $configurator) {
         ->arg('$botUsername', '%app.twitch.bot_username%')
         ->arg('$twitchChannel', '%app.twitch.channel_name%')
         ->call('setLogger', [service('logger')])
+        ->tag('app.serice.client')
+    ;
+    $services->set(GetCommand::class)
+        ->tag('app.controller.command')
+    ;
+    $services->set(PostCommand::class)
+        ->tag('app.controller.command')
+    ;
+    $services->instanceof(CommandController::class)
+        ->tag('app.controller.command')
+    ;
+    $services->set(ClientCollection::class)
+        ->args([tagged_iterator('app.serice.client')])
+    ;
+    $services->set(RoutesCollection::class)
+        ->args([tagged_iterator('app.controller.command')])
     ;
 };

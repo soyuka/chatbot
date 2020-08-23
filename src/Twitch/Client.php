@@ -15,14 +15,14 @@ declare(strict_types=1);
 namespace App\Twitch;
 
 use App\Exception\TwitchConnectionFailedException;
+use App\Service\IClient;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use React\EventLoop\Factory;
 use React\EventLoop\LoopInterface;
 use React\Stream\DuplexResourceStream;
 use React\Stream\DuplexStreamInterface;
 
-final class Client
+final class Client implements IClient
 {
     private const TWITCH_IRC_URI = 'irc.chat.twitch.tv';
     private const TWITCH_IRC_PORT = 6667;
@@ -33,7 +33,6 @@ final class Client
     private string $twitchChannel;
     private string $oauthToken;
     private string $botUsername;
-    private $loop;
 
     public function __construct(string $oauthToken, string $botUsername, string $twitchChannel)
     {
@@ -41,14 +40,13 @@ final class Client
         $this->twitchChannel = $twitchChannel;
         $this->oauthToken = $oauthToken;
         $this->botUsername = $botUsername;
-        $this->loop = Factory::create();
     }
 
-    public function connect(?LoopInterface $loop = null): DuplexStreamInterface
+    public function connect(LoopInterface $loop): DuplexStreamInterface
     {
         $stream = stream_socket_client(self::TWITCH_IRC_URI.':'.self::TWITCH_IRC_PORT);
-        $this->socket = new DuplexResourceStream($stream, $loop ?? $this->loop, self::MAX_LINE);
-        $this->logger->info(sprintf('Connecting onto %s:%s on channel %s as %s', self::TWITCH_IRC_URI,
+        $this->socket = new DuplexResourceStream($stream, $loop, self::MAX_LINE);
+        $this->logger->info(sprintf('Connecting onto %s:%s on twitchChannel %s as %s', self::TWITCH_IRC_URI,
             self::TWITCH_IRC_PORT, $this->twitchChannel, $this->botUsername));
         $this->send(sprintf('PASS %s', $this->oauthToken));
         $this->send(sprintf('NICK %s', $this->botUsername));
@@ -112,5 +110,10 @@ final class Client
     public function isConnected(): bool
     {
         return $this->socket->isReadable() && $this->socket->isWritable();
+    }
+
+    public function get(string $service): IClient
+    {
+        return $this;
     }
 }
