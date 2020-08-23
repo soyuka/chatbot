@@ -1,5 +1,15 @@
 <?php
 
+/*
+ * This file is part of the Bizmuth Bot project
+ *
+ * (c) Antoine Bluchet <antoine@bluchet.fr>
+ * (c) Lemay Marc <flugv1@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use App\Drift\Controller\CommandController;
@@ -14,7 +24,7 @@ use Symfony\Component\Mercure\Jwt\StaticJwtProvider;
 use Symfony\Component\Mercure\Publisher;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-return function(ContainerConfigurator $configurator) {
+return function (ContainerConfigurator $configurator) {
     $parameters = $configurator->parameters();
     $parameters->set('app.mercure.jwt', $_ENV['MERCURE_JWT_TOKEN'])
         ->set('app.mercure.hub', $_ENV['MERCURE_HUB_URL'])
@@ -24,7 +34,7 @@ return function(ContainerConfigurator $configurator) {
         ->defaults()
         ->autowire()
         ->autoconfigure()
-        ->bind('$bootstrapPath', getcwd() . '/vendor/drift/server/src/bootstrap.php')
+        ->bind('$bootstrapPath', getcwd().'/vendor/drift/server/src/bootstrap.php')
         ->bind('$mercureHubUrl', '%app.mercure.hub%')
         ->bind('$twitchChannel', '%app.twitch.channel_name%')
         ->bind('$httpHost', '0.0.0.0:8080')
@@ -44,7 +54,7 @@ return function(ContainerConfigurator $configurator) {
             service(HttpClientInterface::class),
         ])
     ;
-    /**
+    /*
      * Spotify Client
      */
     $configurator->parameters()
@@ -53,7 +63,7 @@ return function(ContainerConfigurator $configurator) {
     $services->get(SpotifyClient::class)
         ->arg('$spotifyToken', '%app.spotify.oauth_token%')
     ;
-    /**
+    /*
      * Twitch settings
      */
     $configurator->parameters()
@@ -83,5 +93,4 @@ return function(ContainerConfigurator $configurator) {
     $services->set(RoutesCollection::class)
         ->args([tagged_iterator('app.controller.command')])
     ;
-    
 };
